@@ -1,7 +1,7 @@
 ---
 title: "Digital Portfolio"
 author: "Aiden O'Neill"
-date: "10/18/2020"
+date: "10/27/2020"
 output:
   html_document:
     df_print: paged
@@ -38,201 +38,6 @@ library(gmodels)#chi-square effect size
 
 ## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r Prepare Step}
-summary(sPerformanceMerged)
-
-summary(sPerformanceMerged$G1.x)
-summary(sPerformanceMerged$G1.y)
-summary(sPerformanceMerged$G2.x)
-summary(sPerformanceMerged$G2.y)
-summary(sPerformanceMerged$G3.x)
-summary(sPerformanceMerged$age)
-
-```
-
-```{r Explore Summary Statistics and Visualisation}
-Mode <- function(x) {
-  ux <- unique(x)
-  ux[which.max(tabulate(match(x, ux)))]
-}
-
-mean(sPerformanceMerged$age)
-sd(sPerformanceMerged$age)
-
-Mode(sPerformanceMerged$famrel.x)
-
-qplot(y = G3.x, data = sPerformanceMerged, geom = "boxplot" )
-qplot(x = G2.y, data = sPerformanceMerged)
-qplot(x = famrel.x, data = sPerformanceMerged)
-
-gG3 <- ggplot(sPerformanceMerged, aes(y=G3.x))
-gG3 <- gG3 + labs(x="Final Grade in Maths - G3.x")
-gG3 <- gG3 + geom_boxplot(binwidth=1, colour="black")
-gG3
-
-gG2 <- ggplot(sPerformanceMerged, aes(x=G2.y))
-gG2 <- gG2 + labs(x="Second Grade in Portuguese - G2.y")
-gG2 <- gG2 + geom_histogram(binwidth=1, fill="darkgreen", colour = "black")
-gG2
-
-gfamrel <- ggplot(sPerformanceMerged, aes(x=famrel.x))
-gfamrel <- gfamrel + labs(x="Family Realitionship")
-gfamrel <- gfamrel + geom_bar(fill="blue")
-gfamrel
-
-```
-
-```{r Explore Step Normality G3.x}
-#Maths Final Grade - G3.x
-
-gm <- ggplot(sPerformanceMerged, aes(x=G3.x))
-gm <- gm + labs(x="Final Grade in Maths - G3.x")
-gm <- gm + geom_histogram(binwidth=1, colour="black" , aes(y=..density.., fill=..count..))
-gm <- gm + scale_fill_gradient("Count", low="#DCDCDC", high="#7C7C7C")
-gm <- gm + stat_function(fun=dnorm, color="red",args=list(mean=mean(sPerformanceMerged$G3.x, na.rm=TRUE), sd=sd(sPerformanceMerged$G3.x, na.rm=TRUE)))
-gm
-
-qqnorm(sPerformanceMerged$G3.x)
-qqline(sPerformanceMerged$G3.x, col=1) 
-
-pastecs::stat.desc(sPerformanceMerged$G3.x, basic=F)
-
-tpskew<-semTools::skew(sPerformanceMerged$G3.x)
-tpkurt<-semTools::kurtosis(sPerformanceMerged$G3.x)
-tpskew[1]/tpskew[2]
-
-tpkurt[1]/tpkurt[2]
-
-zg3.x<- abs(scale(sPerformanceMerged$G3.x))
-
-FSA::perc(as.numeric(zg3.x), 1.96, "gt")
-FSA::perc(as.numeric(zg3.x), 3.29, "gt")
-
-```
-
-```{r Explore Step Normality G1.x}
-#Maths Final Grade - G1.x
-
-gm <- ggplot(sPerformanceMerged, aes(x=G1.x))
-gm <- gm + labs(x="Final Grade in Maths - G1.x")
-gm <- gm + geom_histogram(binwidth=1, colour="black" , aes(y=..density.., fill=..count..))
-gm <- gm + scale_fill_gradient("Count", low="#DCDCDC", high="#7C7C7C")
-gm <- gm + stat_function(fun=dnorm, color="red",args=list(mean=mean(sPerformanceMerged$G1.x, na.rm=TRUE), sd=sd(sPerformanceMerged$G1.x, na.rm=TRUE)))
-gm
-
-qqnorm(sPerformanceMerged$G1.x)
-qqline(sPerformanceMerged$G1.x, col=1) 
-
-pastecs::stat.desc(sPerformanceMerged$G1.x, basic=F)
-
-tpskew<-semTools::skew(sPerformanceMerged$G1.x)
-tpkurt<-semTools::kurtosis(sPerformanceMerged$G1.x)
-tpskew[1]/tpskew[2]
-
-tpkurt[1]/tpkurt[2]
-
-zG1.x<- abs(scale(sPerformanceMerged$G1.x))
-
-FSA::perc(as.numeric(zG1.x), 1.96, "gt")
-FSA::perc(as.numeric(zG1.x), 3.29, "gt")
-
-```
-
-```{r Explore Step Normality age}
-#Portuguese Final Grade - age
-
-gm <- ggplot(sPerformanceMerged, aes(x=age))
-gm <- gm + labs(x="Final Grade in Portuguese - age")
-gm <- gm + geom_histogram(binwidth=1, colour="black", aes(y=..density.., fill=..count..))
-gm <- gm + scale_fill_gradient("Count", low="#DCDCDC", high="#7C7C7C")
-gm <- gm + stat_function(fun=dnorm, color="red",args=list(mean=mean(sPerformanceMerged$age, na.rm=TRUE), sd=sd(sPerformanceMerged$age, na.rm=TRUE)))
-gm
-
-qqnorm(sPerformanceMerged$age)
-qqline(sPerformanceMerged$age, col=1) 
-
-pastecs::stat.desc(sPerformanceMerged$age, basic=F)
-
-tpskew<-semTools::skew(sPerformanceMerged$age)
-tpkurt<-semTools::kurtosis(sPerformanceMerged$age)
-tpskew[1]/tpskew[2]
-
-tpkurt[1]/tpkurt[2]
-
-zage<- abs(scale(sPerformanceMerged$age))
-
-FSA::perc(as.numeric(zage), 1.96, "gt")
-FSA::perc(as.numeric(zage), 3.29, "gt")
-
-```
-
-```{r Explore Step Normality G2.y}
-#Portuguese Second Grade - G2.y
-
-gm <- ggplot(sPerformanceMerged, aes(x=G2.y))
-gm <- gm + labs(x="Second Grade in Portuguese - G2.y")
-gm <- gm + geom_histogram(binwidth=1, colour="black", aes(y=..density.., fill=..count..))
-gm <- gm + scale_fill_gradient("Count", low="#DCDCDC", high="#7C7C7C")
-gm <- gm + stat_function(fun=dnorm, color="red",args=list(mean=mean(sPerformanceMerged$G2.y, na.rm=TRUE), sd=sd(sPerformanceMerged$G2.y, na.rm=TRUE)))
-gm
-
-qqnorm(sPerformanceMerged$G2.y)
-qqline(sPerformanceMerged$G2.y, col=1) 
-
-pastecs::stat.desc(sPerformanceMerged$G2.y, basic=F)
-
-tpskew<-semTools::skew(sPerformanceMerged$G2.y)
-tpkurt<-semTools::kurtosis(sPerformanceMerged$G2.y)
-tpskew[1]/tpskew[2]
-
-tpkurt[1]/tpkurt[2]
-
-zG2.y<- abs(scale(sPerformanceMerged$G2.y))
-
-FSA::perc(as.numeric(zG2.y), 1.96, "gt")
-FSA::perc(as.numeric(zG2.y), 3.29, "gt")
-
-```
-##Analyse
-
-```{r Analyse Step Correlation - G2.y ~ G3.x}
-gm <- ggplot(sPerformanceMerged, aes(G2.y,G3.x))
-gm <- gm + geom_point(colour = "Blue") + geom_smooth(method = "lm", colour = "Blue", se = F)
-gm
-
-scatterplot(G3.x~G2.y, regLine=FALSE, smooth=list(span=1, spread=FALSE), 
-  boxplots=FALSE, data=sPerformanceMerged)
-
-cor.test(sPerformanceMerged$G2.y, sPerformanceMerged$G3.x, method='pearson')
-
-cor.test(sPerformanceMerged$G2.y, sPerformanceMerged$G3.x, method = "spearman")
-
-cor.test(sPerformanceMerged$G2.y, sPerformanceMerged$G3.x, method = "kendall")
-```
-
-```{r Analyse Step Correlation Second Math Grade ~ Final Math Grade}
-gm <- ggplot(sPerformanceMerged, aes(G1.x,G3.x))
-gm <- gm + geom_point(colour = "Blue") + geom_smooth(method = "lm", colour = "Blue", se = F)
-gm
-
-scatterplot(G1.x~G3.x, regLine=FALSE, smooth=FALSE, boxplots=FALSE, 
-  data=sPerformanceMerged)
-
-cor.test(sPerformanceMerged$G1.x, sPerformanceMerged$G3.x, method='pearson')
-
-cor.test(sPerformanceMerged$G1.x, sPerformanceMerged$G3.x, method = "spearman")
-
-cor.test(sPerformanceMerged$G1.x, sPerformanceMerged$G3.x, method = "kendall")
-
-```
-
-
-## R Markdown
-
 ```{r Analyse Step Correlation - G2.y ~ G3.x}
 gm <- ggplot(sPerformanceMerged, aes(G2.y,G3.x))
 gm <- gm + geom_point(colour = "Blue") + geom_smooth(method = "lm", colour = "Blue", se = F)
@@ -265,7 +70,7 @@ cor.test(sPerformanceMerged$G1first.x, sPerformanceMerged$G3.x, method = "kendal
 ```
 
 ### Romantic.x Generate histogram
-```{ r Analyse Romantic relationsip against g3.x}
+```{r}
 
 #We will allocate the histogram to a variable to allow use to manipulate it
 gg <- ggplot(sPerformanceMerged, aes(x=G3.x))
@@ -291,7 +96,7 @@ qqline(sPerformanceMerged$G3.x, col=2) #show a line on theplot
 
 
 ### G3.x Generate Summary Statistics 
-```{r Analyse Romantic relationsip against g3.x}
+```{r}
 pastecs::stat.desc(sPerformanceMerged$G3.x, basic=F)
 
 tpskew<-semTools::skew(sPerformanceMerged$G3.x)
@@ -310,7 +115,7 @@ FSA::perc(as.numeric(zG3x), 3.29, "gt")
 ### Differences - Parametric Tests
 #### Independent t-test
 ##### Describe G3.x Grade by group (Relationship v non-Relationship - variable romantic.x)
-```{r Analyse T-test Describe}
+```{r Describe}
 #Get descriptive stastitics by group - output as a matrix
 psych::describeBy(sPerformanceMerged$G3.x, sPerformanceMerged$romantic.x, mat=TRUE)
 
@@ -340,7 +145,7 @@ effes
 
 ```
 
-```{r Analyse NON Parametric test - difference}
+```{r NON Parametric test - difference}
 
 #Get your descriptive statistcs
 by(sPerformanceMerged$G3.y,sPerformanceMerged$internet, median)
@@ -384,7 +189,7 @@ aoveta<-sjstats::eta_sq(res2)[2]
 
 ```
 
-```{r Analyse kruskal wallis test for reason a student attended and studytime}
+```{r kruskal wallis test for reason a student attended and studytime}
 
 psych::describeBy(as.numeric(sPerformanceMerged$studytime.x),factor(sPerformanceMerged$reason) )
 stats::kruskal.test(studytime.x~reason,data=sPerformanceMerged)
@@ -394,8 +199,8 @@ rstatix::kruskal_effsize(sPerformanceMerged, studytime.x~reason, ci = FALSE, con
   ci.type = "perc", nboot = 1000)#uses bootstrapping
 
 ```
- 
-```{r Analyse Difference Nominal}
+
+```{r Difference Nominal}
 #Use the Crosstable function
 #CrossTable(predictor, outcome, fisher = TRUE, chisq = TRUE, expected = TRUE)
 gmodels::CrossTable(sPerformanceMerged$sex, sPerformanceMerged$activities.x, fisher = TRUE, chisq = TRUE, expected = TRUE, sresid = TRUE, format = "SPSS")
@@ -418,7 +223,7 @@ sjstats::cramer(mytable)
 
 ```
 
-```{r Analyse Repeated Measure T-test}
+```{r Repeated Measure T-test}
 #Paired T-test:
 summary(sPerformanceMerged$G2.x)
 summary(sPerformanceMerged$G3.x)
@@ -438,5 +243,4 @@ effectsize::t_to_d(t = res$statistic, res$parameter)
 #Eta squared calculation
 effes=round((res$statistic*res$statistic)/((res$statistic*res$statistic)+(res$parameter)),3)
 effes
-```
 ```

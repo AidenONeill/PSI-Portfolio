@@ -179,19 +179,30 @@ FSA::perc(as.numeric(zG2.y), 3.29, "gt")
 
 ```
 
-```{r Explore Step Correlation }
-gm <- ggplot(sPerformanceMerged, aes(G2.y,G3.x))
-gm <- gm + geom_point(colour = "Blue") + geom_smooth(method = "lm", colour = "Blue", se = F)
+```{r Explore Step Normality G3.y}
+#Portuguese Second Grade - G3.y
+
+gm <- ggplot(sPerformanceMerged, aes(x=G3.y))
+gm <- gm + labs(x="Final Grade in Portuguese - G3.y")
+gm <- gm + geom_histogram(binwidth=1, colour="black", aes(y=..density.., fill=..count..))
+gm <- gm + scale_fill_gradient("Count", low="#DCDCDC", high="#7C7C7C")
+gm <- gm + stat_function(fun=dnorm, color="red",args=list(mean=mean(sPerformanceMerged$G3.y, na.rm=TRUE), sd=sd(sPerformanceMerged$G3.y, na.rm=TRUE)))
 gm
 
-scatterplot(G3.x~G2.y, regLine=FALSE, smooth=list(span=1, spread=FALSE), 
-  boxplots=FALSE, data=sPerformanceMerged)
+qqnorm(sPerformanceMerged$G3.y)
+qqline(sPerformanceMerged$G3.y, col=1) 
 
-library("Rcmdr")
-cor.test(sPerformanceMerged$G2.y, sPerformanceMerged$G3.x, method='pearson')
+pastecs::stat.desc(sPerformanceMerged$G3.y, basic=F)
 
-cor.test(sPerformanceMerged$G2.y, sPerformanceMerged$G3.x, method = "spearman")
+tpskew<-semTools::skew(sPerformanceMerged$G3.y)
+tpkurt<-semTools::kurtosis(sPerformanceMerged$G3.y)
+tpskew[1]/tpskew[2]
 
-cor.test(sPerformanceMerged$G2.y, sPerformanceMerged$G3.x, method = "kendall")
-```
+tpkurt[1]/tpkurt[2]
+
+zG3.y<- abs(scale(sPerformanceMerged$G3.y))
+
+FSA::perc(as.numeric(zG3.y), 1.96, "gt")
+FSA::perc(as.numeric(zG3.y), 3.29, "gt")
+
 ```
