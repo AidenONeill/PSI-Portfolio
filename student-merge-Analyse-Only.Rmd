@@ -53,7 +53,7 @@ cor.test(sPerformanceMerged$G2.y, sPerformanceMerged$G3.x, method = "spearman")
 cor.test(sPerformanceMerged$G2.y, sPerformanceMerged$G3.x, method = "kendall")
 ```
 
-```{r Analyse Step Correlation Second Math Grade ~ Final Math Grade}
+```{r Analyse Step Correlation First Math Grade ~ Final Math Grade}
 gm <- ggplot(sPerformanceMerged, aes(G1.x,G3.x))
 gm <- gm + geom_point(colour = "Blue") + geom_smooth(method = "lm", colour = "Blue", se = F)
 gm
@@ -65,7 +65,7 @@ cor.test(sPerformanceMerged$G1.x, sPerformanceMerged$G3.x, method='pearson')
 
 cor.test(sPerformanceMerged$G1.x, sPerformanceMerged$G3.x, method = "spearman")
 
-cor.test(sPerformanceMerged$G1first.x, sPerformanceMerged$G3.x, method = "kendall")
+cor.test(sPerformanceMerged$G1.x, sPerformanceMerged$G3.x, method = "kendall")
 
 ```
 
