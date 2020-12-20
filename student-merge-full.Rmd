@@ -14,11 +14,13 @@ editor_options:
 
 sPerformanceMaths=read.table("student-mat.csv",sep=";",header=TRUE)
 sPerformancePor=read.table("student-por.csv",sep=";",header=TRUE)
+spersonality=read.table("studentpIusepersonality.csv",sep=",",header=TRUE)
+
 
 sPerformanceMerged=merge(sPerformanceMaths,sPerformancePor,by=c("school","sex","age","address","famsize","Pstatus","Medu","Fedu","Mjob","Fjob","reason","nursery","internet"))
 print(nrow(sPerformanceMerged)) # 382 students
 
-needed_packages <- c("pastecs", "ggplot2", "semTools", "FSA", "car", "effectsize", "userfriendlyscience", "rstatix", "sjstats", "gmodels")                                    
+needed_packages <- c("pastecs", "ggplot2", "semTools", "FSA", "car", "effectsize", "userfriendlyscience", "rstatix", "sjstats", "gmodels","stargazer","lm.beta","foreign","olsrr", "psych",  "REdaS", "Hmisc", "corrplot", "ggcorrplot", "factoextra",  "nFactors", "HDclassif")                                    
 # Extract not installed packages
 not_installed <- needed_packages[!(needed_packages %in% installed.packages()[ , "Package"])]    
 # Install not installed packages
@@ -33,6 +35,18 @@ library(userfriendlyscience)
 library(rstatix)#Kruskal wallis effect size
 library(sjstats)#chi-square effect size
 library(gmodels)#chi-square effect size
+library(olsrr)
+library(foreign) #To work with SPSS data
+library(lm.beta) #Will allow us to isolate the beta co-efficients
+library(stargazer)#For formatting outputs/tables
+library(psych)
+library(REdaS)
+library(Hmisc)
+library(corrplot)
+library(ggcorrplot)
+library(factoextra)#Used for principal component analysis to get a different view of eigenvalues
+library(nFactors)
+library(HDclassif)
 
 ```
 
@@ -439,4 +453,197 @@ effectsize::t_to_d(t = res$statistic, res$parameter)
 effes=round((res$statistic*res$statistic)/((res$statistic*res$statistic)+(res$parameter)),3)
 effes
 ```
+
+```{r Analyse Step Correlation Second Math Grade ~ Final Math Grade}
+gm <- ggplot(sPerformanceMerged, aes(G2.x,G3.x))
+gm <- gm + geom_point(colour = "Blue") + geom_smooth(method = "lm", colour = "Blue", se = F)
+gm
+
+scatterplot(G2.x~G3.x, regLine=FALSE, smooth=FALSE, boxplots=FALSE, 
+  data=sPerformanceMerged)
+
+cor.test(sPerformanceMerged$G2.x, sPerformanceMerged$G3.x, method='pearson')
+
+cor.test(sPerformanceMerged$G2.x, sPerformanceMerged$G3.x, method = "spearman")
+
+cor.test(sPerformanceMerged$G2.x, sPerformanceMerged$G3.x, method = "kendall")
+
+```
+
+#Build linear regression model1- Outcome variable: Maths Grade G3.x, Predictors: Maths Grade G2.x and Gender
+
+```{r Linear Regression}
+sPerformanceMerged$gender=ifelse(sPerformanceMerged$sex == "M", 0, ifelse(sPerformanceMerged$sex == "F", 1, NA))
+
+model1=lm(sPerformanceMerged$G3.x~sPerformanceMerged$G2.x+sPerformanceMerged$gender)
+summary(model1)
+
+anova(model1)
+lm.beta::lm.beta(model1)
+stargazer(model1, type="text") #Tidy output of all the required stats
+plot(model1)
+
+
+#Influential Outliers - Cook's distance
+cooksd<-sort(cooks.distance(model1))
+# plot Cook's distance
+plot(cooksd, pch="*", cex=2, main="Influential Obs by Cooks distance")  
+abline(h = 4*mean(cooksd, na.rm=T), col="red")  # add cutoff line
+text(x=1:length(cooksd)+1, y=cooksd, labels=ifelse(cooksd>4*mean(cooksd, na.rm=T),names(cooksd),""), col="red")  # add labels
+
+
+#find rows related to influential observations
+influential <- as.numeric(names(cooksd)[(cooksd > 4*mean(cooksd, na.rm=T))])  # influential row numbers
+stem(influential)
+head(sPerformanceMerged[influential, ])  # influential observations.
+
+
+car::outlierTest(model1) # Bonferonni p-value for most extreme obs - Are there any cases where the outcome variable has an unusual variable for its predictor values?
+
+car::leveragePlots(model1) # leverage plots
+
+
+#Create histogram and a density plot of the residuals
+plot(density(resid(model1))) 
+
+#Create a QQ plot qPlot(model, main="QQ Plot") #qq plot for studentized resid 
+car::qqPlot(model1, main="QQ Plot Model 1") #qq plot for studentized resid
+
+
+#Collinearity
+vifmodel<-car::vif(model1)
+vifmodel
+#Tolerance
+1/vifmodel
+
+```
+
+```{r Logistic regression}
+#Make sure categorical data is used as factors
+sPerformanceMerged$gender=ifelse(sPerformanceMerged$sex == "F", 0, ifelse(sPerformanceMerged$sex == "M", 1, NA))
+sPerformanceMerged$paid=ifelse(sPerformanceMerged$paid.x == "no", 0, ifelse(sPerformanceMerged$paid.x == "yes", 1, NA))
+sPerformanceMerged$famsup=ifelse(sPerformanceMerged$famsup.x == "no", 0, ifelse(sPerformanceMerged$famsup.x == "yes", 1, NA))
+
+logmodel <- glm(paid ~ gender+famsup, data = sPerformanceMerged, na.action = na.exclude, family = binomial(link=logit))
+
+#Full summary of the model
+summary(logmodel)
+
+#Chi-square plus significance
+lmtest::lrtest(logmodel)
+
+#Chi-square and Pseudo R2 calculation - THESE ARE INCLUDED FOR INFORMATION ONLY
+#lmtest:lrtest achieves the same thing
+
+#Pseudo Rsquared 
+DescTools::PseudoR2(logmodel, which="CoxSnell")
+DescTools::PseudoR2(logmodel, which="Nagelkerke")
+
+#Output the sensitivity, specificity, and ROC plot
+Epi::ROC(form=sPerformanceMerged$paid ~ sPerformanceMerged$gender+sPerformanceMerged$famsup, plot="ROC")
+                      
+
+#Summary of the model with co-efficients
+stargazer(logmodel, type="text")
+```
+
+```{r predictorsmodel}
+#Exponentiate the co-efficients
+exp(coefficients(logmodel))
+## odds ratios 
+cbind(Estimate=round(coef(logmodel),4),
+OR=round(exp(coef(logmodel)),4))
+
+#Confusion matrix
+regclass::confusion_matrix(logmodel)
+
+```
+
+
+##Step 1: Screen the correlation matrix
+```{r Dimension Reduction - Generate matrix}
+#create a correlation matrix (these are just some methods)
+raqMatrix<-cor(spersonality)
+round(raqMatrix, 2)
+```
+
+##Step 2: Verify
+```{r Dimension Reduction - Verify if data is acceptable for FA}
+p.mat <- ggcorrplot::cor_pmat(spersonality)
+ggcorrplot::ggcorrplot(raqMatrix, title = "Correlation matrix for spersonality data")
+
+psych::cortest.bartlett(spersonality)
+det(raqMatrix)
+psych::KMO(spersonality)
+```
+
+##Step 3: Do the Dimension Reduction  (PRINCIPAL COMPONENTS ANALYSIS)
+
+```{r Dimension Reduction}
+#pcModel<-principal(dataframe/R-matrix, nfactors = number of factors, rotate = "method of rotation", scores = TRUE)
+
+#On raw data using principal components analysis
+#For PCA we know how many factors if is possible to find
+#principal will work out our loadings of each variable onto each component, the proportion each component explained and the cumulative proportion of variance explained 
+pc1 <-  principal(spersonality, nfactors = length(spersonality), rotate = "none")
+pc1#output all details of the PCA
+```
+
+##Step 4: Decide which components to retain (PRINCIPAL COMPONENTS ANALYSIS)
+```{r Dimension Reduction}
+#Create the scree plot
+plot(pc1$values, type = "b") 
+#Print the variance explained by each component
+pc1$Vaccounted 
+#Print the Eigenvalues
+pc1$values
+
+
+#Another way to look at eigen values plus variance explained (need to use princomp function of PCA to get right class for use with factoextra functions)
+pcf=princomp(spersonality)
+factoextra::get_eigenvalue(pcf)
+factoextra::fviz_eig(pcf, addlabels = TRUE, ylim = c(0, 50))#Visualize the Eigenvalues
+factoextra::fviz_pca_var(pcf, col.var = "black")
+factoextra::fviz_pca_var(pcf, col.var = "cos2",
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
+             repel = TRUE # Avoid text overlapping
+             )
+
+#Print the loadings above the level of 0.3
+psych::print.psych(pc1, cut = 0.3, sort = TRUE)
+#create a diagram showing the components and how the manifest variables load
+fa.diagram(pc1) 
+#Show the loadings of variables on to components
+fa.sort(pc1$loading)
+#Output the communalities of variables across components (will be one for PCA since all the variance is used)
+pc1$communality 
+
+# Contributions of variables to PC1
+factoextra::fviz_contrib(pcf, choice = "var", axes = 1, top = 10)
+# Contributions of variables to PC2
+factoextra::fviz_contrib(pcf, choice = "var", axes = 2, top = 10)
+```
+
+##Step 5: Apply rotation
+```{r Dimension Reduction}
+#Apply rotation to try to refine the component structure
+pc2 <-  principal(spersonality, nfactors = 40, rotate = "varimax")#Extracting 7 factors
+#output the components
+psych::print.psych(pc2, cut = 0.3, sort = TRUE)
+#output the communalities
+pc2$communality
+fa.sort(pc2$loading)
+fa.diagram(pc2) 
+
+```
+
+##Step 6: Reliability Analysis
+```{r Dimension Reduction}
+RC7 <-spersonality[, c(34,46,70)]
+#Output our Cronbach Alpha values
+psych::alpha(RC7 , check.keys=TRUE) #for illustrative proposes
+
+```
+
+
 ```

@@ -117,7 +117,6 @@ vifmodel
 ```
 
 ```{r Logistic regression}
-#Make sure categorical data is used as factors
 sPerformanceMerged$gender=ifelse(sPerformanceMerged$sex == "F", 0, ifelse(sPerformanceMerged$sex == "M", 1, NA))
 sPerformanceMerged$paid=ifelse(sPerformanceMerged$paid.x == "no", 0, ifelse(sPerformanceMerged$paid.x == "yes", 1, NA))
 sPerformanceMerged$famsup=ifelse(sPerformanceMerged$famsup.x == "no", 0, ifelse(sPerformanceMerged$famsup.x == "yes", 1, NA))
@@ -157,7 +156,7 @@ regclass::confusion_matrix(logmodel)
 
 ```
 
-
+#Dimenstion Reduction
 ##Step 1: Screen the correlation matrix
 ```{r Dimension Reduction - Generate matrix}
 #create a correlation matrix (these are just some methods)
@@ -178,8 +177,6 @@ psych::KMO(spersonality)
 ##Step 3: Do the Dimension Reduction  (PRINCIPAL COMPONENTS ANALYSIS)
 
 ```{r Dimension Reduction}
-#pcModel<-principal(dataframe/R-matrix, nfactors = number of factors, rotate = "method of rotation", scores = TRUE)
-
 #On raw data using principal components analysis
 #For PCA we know how many factors if is possible to find
 #principal will work out our loadings of each variable onto each component, the proportion each component explained and the cumulative proportion of variance explained 
@@ -225,7 +222,7 @@ factoextra::fviz_contrib(pcf, choice = "var", axes = 2, top = 10)
 ##Step 5: Apply rotation
 ```{r Dimension Reduction}
 #Apply rotation to try to refine the component structure
-pc2 <-  principal(spersonality, nfactors = 40, rotate = "varimax")#Extracting 7 factors
+pc2 <-  principal(spersonality, nfactors = 40, rotate = "varimax")#Extracting 40 factors
 #output the components
 psych::print.psych(pc2, cut = 0.3, sort = TRUE)
 #output the communalities
